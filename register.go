@@ -22,6 +22,16 @@ var (
 	default_route func(*http.Request) (int, map[string]interface{}, error) = defaultRoute
 	// Default method handler, results in 405 responses
 	default_method func(*http.Request) (int, map[string]interface{}, error) = defaultMethod
+	// Default bodies to be returned for certain status codes
+	// Can be added to and overwritten with registers
+	catchers map[int]map[string]interface{} = map[int]map[string]interface{}{
+		400: map[string]interface{}{
+			"error": "bad_request",
+		},
+		401: map[string]interface{}{
+			"error": "unauthorized",
+		},
+	}
 )
 
 func getRegexPointer(route string) (pointer *regexp.Regexp) {
@@ -79,5 +89,11 @@ func RegisterDefaultRoute(handler func(*http.Request) (int, map[string]interface
 // Set the default handler for requests that do not match any method on a route
 func RegisterDefaultMethod(handler func(*http.Request) (int, map[string]interface{}, error)) {
 	default_method = handler
+	return
+}
+
+// Register a default data response for a response of code which has no r_map
+func RegisterCatch(code int, data map[string]interface{}) {
+	catchers[code] = data
 	return
 }

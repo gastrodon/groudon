@@ -58,8 +58,11 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if r_map == nil {
-		writer.WriteHeader(204)
-		return
+		var exists bool
+		if r_map, exists = catchers[code]; !exists {
+			writer.WriteHeader(204)
+			return
+		}
 	}
 
 	var response []byte

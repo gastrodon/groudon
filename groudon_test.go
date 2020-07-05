@@ -1,15 +1,19 @@
 package groudon
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"regexp"
 	"testing"
 )
 
 var (
-	blank = new(http.Request)
+	keep_catch map[int]map[string]interface{}
+	blank      *http.Request = new(http.Request)
 )
 
 func silent(_ *http.Request) (_ int, _ map[string]interface{}, _ error) {
@@ -55,7 +59,20 @@ func restore() {
 	middlewear_handlers = make([]func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error), 0)
 	default_route = defaultRoute
 	default_method = defaultMethod
+	catchers = keep_catch
 	return
+}
+
+func TestMain(main *testing.M) {
+	keep_catch = make(map[int]map[string]interface{}, len(catchers))
+
+	var code int
+	var catch map[string]interface{}
+	for code, catch = range catchers {
+		keep_catch[code] = catch
+	}
+
+	os.Exit(main.Run())
 }
 
 // I used the test to test the test
@@ -67,10 +84,18 @@ func Test_restore(test *testing.T) {
 		test.Errorf("default_method got code %d", code)
 	}
 
+	catchers[400] = map[string]interface{}{
+		"error": "oopsies",
+	}
+
 	restore()
 
 	if code, _, _ = default_method(blank); code != 405 {
 		test.Errorf("default_method was not restored, got code %d", code)
+	}
+
+	if catchers[400]["error"].(string) != "bad_request" {
+		test.Errorf("catchers was not restored, got 400: %#v", catchers[400])
 	}
 }
 
@@ -286,5 +311,35 @@ func Test_route_err(test *testing.T) {
 
 	if recorder.Code != 500 {
 		test.Errorf("request was not routed to ahshit! got code %d", recorder.Code)
+	}
+}
+
+func Test_RegisterCatch(test *testing.T) {
+	defer restore()
+
+	RegisterCatch(400, map[string]interface{}{"error": "foobar"})
+	RegisterHandler("POST", "/", altler)
+
+	var request *http.Request
+	var err error
+	if request, err = http.NewRequest("POST", "http://localhost/", nil); err != nil {
+		test.Fatal(err)
+	}
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request)
+
+	var data []byte
+	if data, err = ioutil.ReadAll(recorder.Body); err != nil {
+		test.Fatal(err)
+	}
+
+	var fetched map[string]interface{}
+	if err = json.Unmarshal(data, &fetched); err != nil {
+		test.Fatal(err)
+	}
+
+	if fetched["error"].(string) != "foobar" {
+		test.Errorf("response mismatch! have: %s, want: foobar", fetched["error"])
 	}
 }
