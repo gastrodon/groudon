@@ -56,10 +56,14 @@ func getMethodMap(pointer *regexp.Regexp) (methods MethodMap) {
 }
 
 // Register some method route combo to some handler
+//
 // method should be a standard HTTP request method
+//
 // route should be a regex-able string that represents some route
+//
 // handler should be a function that accepts a *http.Request,
 // and returns an int status code, map[string]interface{} json response, or any produced error
+//
 // If the regex cannot be compiled, the function will panic
 func RegisterHandler(method, route string, handler func(*http.Request) (int, map[string]interface{}, error)) {
 	var re_pointer *regexp.Regexp = getRegexPointer(route)
@@ -71,9 +75,10 @@ func RegisterHandler(method, route string, handler func(*http.Request) (int, map
 }
 
 // Register some middlewear that each request will pass through before being handled normally
+//
 // middlewear should be a function that returns a bool that indicates
-// whether or not it will continue to the next. If false, the next 2-3 arguments of
-// followed by an int, map[string]interface{}, error
+// whether or not it will continue to the next. If false,
+// code, r_map, and err (if not nil)
 // are used as a response to the request
 func RegisterMiddlewear(middlewear func(*http.Request) (bool, int, map[string]interface{}, error)) {
 	middlewear_handlers = append(middlewear_handlers, middlewear)

@@ -45,6 +45,12 @@ func handleAfterMiddlewear(request *http.Request, handler func(*http.Request) (i
 	return
 }
 
+// Handle all requests with this method
+//
+// For any route that this recieves, it will look up where it should be routed,
+// including first passing it through middlewear
+//
+// It will also handle errs and default r_maps
 func Route(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
