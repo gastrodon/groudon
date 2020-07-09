@@ -41,8 +41,7 @@ func altler(_ *http.Request) (code int, _ map[string]interface{}, _ error) {
 	return
 }
 
-func donotpass(request *http.Request) (modified *http.Request, pass bool, code int, _ map[string]interface{}, _ error) {
-	modified = request
+func donotpass(request *http.Request) (pass bool, code int, _ map[string]interface{}, _ error) {
 	pass = false
 	code = 409
 	return
@@ -56,7 +55,7 @@ func defaultable(_ *http.Request) (code int, _ map[string]interface{}, _ error) 
 func restore() {
 	stored_expressions = make(map[string]*regexp.Regexp)
 	path_handlers = make(map[*regexp.Regexp]*MethodMap)
-	middlewear_handlers = make([]func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error), 0)
+	middlewear_handlers = make([]func(*http.Request) (bool, int, map[string]interface{}, error), 0)
 	default_route = defaultRoute
 	default_method = defaultMethod
 	catchers = keep_catch
@@ -136,7 +135,7 @@ func Test_RegisterMiddlewear(test *testing.T) {
 
 	var pass bool
 	var code int
-	_, pass, code, _, _ = middlewear_handlers[0](blank)
+	pass, code, _, _ = middlewear_handlers[0](blank)
 
 	if pass {
 		test.Errorf("donotpass allowed us to pass!")

@@ -33,10 +33,10 @@ func resolveHandler(method, route string) (handler func(*http.Request) (int, map
 }
 
 func handleAfterMiddlewear(request *http.Request, handler func(*http.Request) (int, map[string]interface{}, error)) (code int, r_map map[string]interface{}, err error) {
-	var current func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)
+	var current func(*http.Request) (bool, int, map[string]interface{}, error)
 	var pass bool
 	for _, current = range middlewear_handlers {
-		if request, pass, code, r_map, err = current(request); !pass || err != nil {
+		if pass, code, r_map, err = current(request); !pass || err != nil {
 			return
 		}
 	}

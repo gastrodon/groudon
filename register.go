@@ -17,7 +17,7 @@ var (
 	path_handlers map[*regexp.Regexp]*MethodMap = make(map[*regexp.Regexp]*MethodMap)
 	// This stores middlewear funcs
 	// that will all be called on a request before it's handled normally
-	middlewear_handlers []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error) = make([]func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error), 0)
+	middlewear_handlers []func(*http.Request) (bool, int, map[string]interface{}, error) = make([]func(*http.Request) (bool, int, map[string]interface{}, error), 0)
 	// Default route handler, results in 404 responses
 	default_route func(*http.Request) (int, map[string]interface{}, error) = defaultRoute
 	// Default method handler, results in 405 responses
@@ -75,7 +75,7 @@ func RegisterHandler(method, route string, handler func(*http.Request) (int, map
 // whether or not it will continue to the next. If false, the next 2-3 arguments of
 // followed by an int, map[string]interface{}, error
 // are used as a response to the request
-func RegisterMiddlewear(middlewear func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) {
+func RegisterMiddlewear(middlewear func(*http.Request) (bool, int, map[string]interface{}, error)) {
 	middlewear_handlers = append(middlewear_handlers, middlewear)
 	return
 }
