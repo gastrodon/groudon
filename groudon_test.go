@@ -55,7 +55,7 @@ func defaultable(_ *http.Request) (code int, _ map[string]interface{}, _ error) 
 func restore() {
 	stored_expressions = make(map[string]*regexp.Regexp)
 	path_handlers = make(map[*regexp.Regexp]*MethodMap)
-	middlewear_handlers = make([]func(*http.Request) (bool, int, map[string]interface{}, error), 0)
+	middleware_handlers = make([]func(*http.Request) (bool, int, map[string]interface{}, error), 0)
 	default_route = defaultRoute
 	default_method = defaultMethod
 	catchers = keep_catch
@@ -124,18 +124,18 @@ func Test_RegisterHandler(test *testing.T) {
 	path_handlers = make(map[*regexp.Regexp]*MethodMap)
 }
 
-func Test_RegisterMiddlewear(test *testing.T) {
+func Test_RegisterMiddleware(test *testing.T) {
 	defer restore()
 
-	if len(middlewear_handlers) != 0 {
-		test.Errorf("Something exists in middlewear_handlers! %#v", middlewear_handlers)
+	if len(middleware_handlers) != 0 {
+		test.Errorf("Something exists in middleware_handlers! %#v", middleware_handlers)
 	}
 
-	RegisterMiddlewear(donotpass)
+	RegisterMiddleware(donotpass)
 
 	var pass bool
 	var code int
-	pass, code, _, _ = middlewear_handlers[0](blank)
+	pass, code, _, _ = middleware_handlers[0](blank)
 
 	if pass {
 		test.Errorf("donotpass allowed us to pass!")
@@ -230,13 +230,13 @@ func Test_resolveHandler_notfound(test *testing.T) {
 	}
 }
 
-func Test_handleAfterMiddlewear(test *testing.T) {
+func Test_handleAfterMiddleware(test *testing.T) {
 	defer restore()
-	RegisterMiddlewear(donotpass)
+	RegisterMiddleware(donotpass)
 	RegisterHandler("POST", "^foobar/?$", pretendler)
 
 	var code int
-	if code, _, _ = handleAfterMiddlewear(blank, resolveHandler("POST", "foobar")); code != 409 {
+	if code, _, _ = handleAfterMiddleware(blank, resolveHandler("POST", "foobar")); code != 409 {
 		test.Errorf("call was not intercepted by donotpass! got code %d", code)
 	}
 }

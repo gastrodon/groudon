@@ -32,10 +32,10 @@ func resolveHandler(method, route string) (handler func(*http.Request) (int, map
 	return
 }
 
-func handleAfterMiddlewear(request *http.Request, handler func(*http.Request) (int, map[string]interface{}, error)) (code int, r_map map[string]interface{}, err error) {
+func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (int, map[string]interface{}, error)) (code int, r_map map[string]interface{}, err error) {
 	var current func(*http.Request) (bool, int, map[string]interface{}, error)
 	var pass bool
-	for _, current = range middlewear_handlers {
+	for _, current = range middleware_handlers {
 		if pass, code, r_map, err = current(request); !pass || err != nil {
 			return
 		}
@@ -48,7 +48,7 @@ func handleAfterMiddlewear(request *http.Request, handler func(*http.Request) (i
 // Handle all requests with this method
 //
 // For any route that this recieves, it will look up where it should be routed,
-// including first passing it through middlewear
+// including first passing it through middleware
 //
 // It will also handle errs and default r_maps
 func Route(writer http.ResponseWriter, request *http.Request) {
@@ -57,7 +57,7 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 	var code int
 	var r_map map[string]interface{}
 	var err error
-	if code, r_map, err = handleAfterMiddlewear(request, resolveHandler(request.Method, request.URL.Path)); err != nil {
+	if code, r_map, err = handleAfterMiddleware(request, resolveHandler(request.Method, request.URL.Path)); err != nil {
 		writer.WriteHeader(500)
 		writer.Write(INTERNAL_ERR)
 		return
