@@ -2,6 +2,7 @@ package groudon
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"regexp"
 )
@@ -50,6 +51,13 @@ func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (i
 	return
 }
 
+func handlePanic() {
+	var have interface{}
+	if have = recover(); have != nil {
+		log.Printf("recovered! \n%#v\n", have)
+	}
+}
+
 // Handle all requests with this method
 //
 // For any route that this recieves, it will look up where it should be routed,
@@ -58,26 +66,35 @@ func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (i
 // It will also handle errs and default r_maps
 func Route(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
+	defer handlePanic()
+
+	log.Printf("%s %s", request.Method, request.URL.Path)
 
 	var code int
 	var r_map map[string]interface{}
 	var err error
 	if code, r_map, err = handleAfterMiddleware(request, resolveHandler(request.Method, request.URL.Path)); err != nil {
+		log.Printf("got err marshalling JSON! \n%#v\n", err)
 		writer.WriteHeader(500)
 		writer.Write(INTERNAL_ERR)
 		return
 	}
 
 	if r_map == nil {
+		log.Printf("used default for %d", code)
+
 		var exists bool
 		if r_map, exists = catchers[code]; !exists {
+			log.Printf("rewrote %d -> 204", code)
 			writer.WriteHeader(204)
 			return
 		}
+
 	}
 
 	var response []byte
 	if response, err = json.Marshal(r_map); err != nil {
+		log.Printf("got err marshalling JSON! \n%#v\n", err)
 		writer.WriteHeader(500)
 		writer.Write(INTERNAL_ERR)
 		return
