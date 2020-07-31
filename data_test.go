@@ -12,11 +12,21 @@ type Something struct {
 	Age    int    `json:"age"`
 }
 
-func (some *Something) Types() (data map[string]string) {
-	data = map[string]string{
-		"name":   "string",
-		"friend": "string",
-		"age":    "number",
+func a_string(it interface{}) (ok bool, _ error) {
+	_, ok = it.(string)
+	return
+}
+
+func a_number(it interface{}) (ok bool, _ error) {
+	_, ok = it.(float64)
+	return
+}
+
+func (some *Something) Validators() (data map[string]func(interface{}) (bool, error)) {
+	data = map[string]func(interface{}) (bool, error){
+		"name":   a_string,
+		"friend": a_string,
+		"age":    a_number,
 	}
 
 	return
