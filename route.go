@@ -32,12 +32,50 @@ func resolveHandler(method, route string) (handler func(*http.Request) (int, map
 	return
 }
 
-func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (int, map[string]interface{}, error)) (code int, r_map map[string]interface{}, err error) {
+func resolveMiddleware(method, route string) (middlewares []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) {
+	var expr *regexp.Regexp
+	var methods *MiddlewareMethodMap
+	for expr, methods = range middleware_path_handlers {
+		if expr.MatchString(route) {
+			if methods == nil {
+				break
+			}
+
+			var exists bool
+			if middlewares, exists = (*methods)[method]; !exists {
+				middlewares = nil
+			}
+
+			return
+		}
+	}
+
+	middlewares = nil
+	return
+}
+
+func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (int, map[string]interface{}, error), route_middlewares []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) (code int, r_map map[string]interface{}, err error) {
 	var current func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)
 	var modified *http.Request
 	var pass bool
 	for _, current = range middleware_handlers {
 		if modified, pass, code, r_map, err = current(request); !pass || err != nil {
+			return
+		}
+
+		if modified != nil {
+			request = modified
+		}
+	}
+
+	if route_middlewares == nil {
+		code, r_map, err = handler(request)
+		return
+	}
+
+	var middleware func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)
+	for _, middleware = range route_middlewares {
+		if modified, pass, code, r_map, err = middleware(request); !pass || err != nil {
 			return
 		}
 
@@ -62,7 +100,11 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 	var code int
 	var r_map map[string]interface{}
 	var err error
-	if code, r_map, err = handleAfterMiddleware(request, resolveHandler(request.Method, request.URL.Path)); err != nil {
+	if code, r_map, err = handleAfterMiddleware(
+		request,
+		resolveHandler(request.Method, request.URL.Path),
+		resolveMiddleware(request.Method, request.URL.Path),
+	); err != nil {
 		writer.WriteHeader(500)
 		writer.Write(INTERNAL_ERR)
 		return

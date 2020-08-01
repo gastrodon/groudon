@@ -236,7 +236,7 @@ func Test_handleAfterMiddleware(test *testing.T) {
 	RegisterHandler("POST", "^foobar/?$", pretendler)
 
 	var code int
-	if code, _, _ = handleAfterMiddleware(blank, resolveHandler("POST", "foobar")); code != 409 {
+	if code, _, _ = handleAfterMiddleware(blank, resolveHandler("POST", "foobar"), nil); code != 409 {
 		test.Errorf("call was not intercepted by donotpass! got code %d", code)
 	}
 }

@@ -7,6 +7,7 @@ import (
 )
 
 type MethodMap map[string]func(*http.Request) (int, map[string]interface{}, error)
+type MiddlewareMethodMap map[string][]func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)
 
 var (
 	// This is for lookups of
@@ -15,6 +16,8 @@ var (
 	// This is for iterating to resolve to a method map
 	// for some actual route in an actual request
 	path_handlers map[*regexp.Regexp]*MethodMap = make(map[*regexp.Regexp]*MethodMap)
+	// This is for middleware bound to a method on a route
+	middleware_path_handlers map[*regexp.Regexp]*MiddlewareMethodMap = make(map[*regexp.Regexp]*MiddlewareMethodMap)
 	// This stores middleware funcs
 	// that will all be called on a request before it's handled normally
 	middleware_handlers []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error) = make([]func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error), 0)
@@ -55,6 +58,16 @@ func getMethodMap(pointer *regexp.Regexp) (methods MethodMap) {
 	return
 }
 
+func getMiddlewareMethodMap(pointer *regexp.Regexp) (methods MiddlewareMethodMap) {
+	if middleware_path_handlers[pointer] != nil {
+		methods = *middleware_path_handlers[pointer]
+		return
+	}
+
+	methods = make(MiddlewareMethodMap)
+	return
+}
+
 // Register some method route combo to some handler
 //
 // method should be a standard HTTP request method
@@ -82,6 +95,34 @@ func RegisterHandler(method, route string, handler func(*http.Request) (int, map
 // are used as a response to the request
 func RegisterMiddleware(middleware func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) {
 	middleware_handlers = append(middleware_handlers, middleware)
+	return
+}
+
+// Register some middleware to only sit in front of a method and route
+//
+// Same as RegisterMiddleware, but methods should be a []string of HTTP methods
+// and route should be a regex-able route that represents some route
+func RegisterMiddlewareRoute(methods []string, route string, middleware func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) {
+	if len(methods) == 0 {
+		return
+	}
+
+	var re_pointer *regexp.Regexp = getRegexPointer(route)
+	var middleware_map MiddlewareMethodMap = getMiddlewareMethodMap(re_pointer)
+
+	var method string
+	for _, method = range methods {
+		method = strings.ToUpper(method)
+
+		if len(middleware_map[method]) == 0 {
+			middleware_map[method] = []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error){middleware}
+			continue
+		}
+
+		middleware_map[method] = append(middleware_map[method], middleware)
+	}
+
+	middleware_path_handlers[re_pointer] = &middleware_map
 	return
 }
 
