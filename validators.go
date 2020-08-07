@@ -5,13 +5,17 @@ import (
 )
 
 const (
-	UUID_PATTERN      = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
-	UUID_ONLY_PATTERN = `^` + UUID_PATTERN + `$`
+	UUID_PATTERN       = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
+	UUID_ONLY_PATTERN  = `^` + UUID_PATTERN + `$`
+	EMAIL_PATTERN      = "[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*"
+	EMAIL_ONLY_PATTERN = `^` + EMAIL_PATTERN + `$`
 )
 
 var (
-	uuid_regex      *regexp.Regexp = regexp.MustCompile(UUID_PATTERN)
-	uuid_only_regex *regexp.Regexp = regexp.MustCompile(UUID_ONLY_PATTERN)
+	uuid_regex       *regexp.Regexp = regexp.MustCompile(UUID_PATTERN)
+	uuid_only_regex  *regexp.Regexp = regexp.MustCompile(UUID_ONLY_PATTERN)
+	email_regex      *regexp.Regexp = regexp.MustCompile(EMAIL_PATTERN)
+	email_only_regex *regexp.Regexp = regexp.MustCompile(EMAIL_ONLY_PATTERN)
 )
 
 func ValidUUID(it interface{}) (ok bool, _ error) {
@@ -21,6 +25,16 @@ func ValidUUID(it interface{}) (ok bool, _ error) {
 	}
 
 	ok = uuid_only_regex.MatchString(id)
+	return
+}
+
+func ValidEmail(it interface{}) (ok bool, _ error) {
+	var email string
+	if email, ok = it.(string); !ok {
+		return
+	}
+
+	ok = email_only_regex.MatchString(email)
 	return
 }
 
