@@ -43,6 +43,28 @@ func ValidString(it interface{}) (ok bool, _ error) {
 	return
 }
 
+func ValidStringSlice(it interface{}) (ok bool, _ error) {
+	if ok = it == nil; ok {
+		return
+	}
+
+	if _, ok = it.([]string); ok {
+		return
+	}
+
+	var them []interface{}
+	if them, ok = it.([]interface{}); !ok {
+		return
+	}
+
+	for _, it = range them {
+		if _, ok = it.(string); !ok {
+			break
+		}
+	}
+	return
+}
+
 func ValidNumber(it interface{}) (ok bool, _ error) {
 	_, ok = it.(float64)
 	return
