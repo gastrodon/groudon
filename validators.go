@@ -66,7 +66,11 @@ func ValidStringSlice(it interface{}) (ok bool, _ error) {
 }
 
 func ValidNumber(it interface{}) (ok bool, _ error) {
-	_, ok = it.(float64)
+	if _, ok = it.(float64); ok {
+		return
+	}
+
+	_, ok = it.(int)
 	return
 }
 
@@ -89,7 +93,11 @@ func OptionalNumber(it interface{}) (ok bool, _ error) {
 		return
 	}
 
-	_, ok = it.(float64)
+	if _, ok = it.(float64); ok {
+		return
+	}
+
+	_, ok = it.(int)
 	return
 }
 
