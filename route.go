@@ -2,6 +2,7 @@ package groudon
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"regexp"
 )
@@ -95,6 +96,7 @@ func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (i
 //
 // It will also handle errs and default r_maps
 func Route(writer http.ResponseWriter, request *http.Request) {
+	log.Println(request.Method, request.URL.Path)
 	writer.Header().Set("Content-Type", "application/json")
 
 	var code int
@@ -107,6 +109,9 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 	); err != nil {
 		writer.WriteHeader(500)
 		writer.Write(INTERNAL_ERR)
+
+		log.Println(request.Method, request.URL.Path, " -> ", 500)
+		log.Println(err)
 		return
 	}
 
@@ -114,6 +119,8 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 		var exists bool
 		if r_map, exists = catchers[code]; !exists {
 			writer.WriteHeader(204)
+
+			log.Println(request.Method, request.URL.Path, " -> ", 204)
 			return
 		}
 	}
@@ -122,10 +129,15 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 	if response, err = json.Marshal(r_map); err != nil {
 		writer.WriteHeader(500)
 		writer.Write(INTERNAL_ERR)
+
+		log.Println(request.Method, request.URL.Path, " -> ", 500)
+		log.Println(err)
 		return
 	}
 
 	writer.WriteHeader(code)
 	writer.Write(response)
+
+	log.Println(request.Method, request.URL.Path, " -> ", code)
 	return
 }
