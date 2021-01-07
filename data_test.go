@@ -72,3 +72,27 @@ func Test_something(test *testing.T) {
 	}
 
 }
+
+func Test_something_badRequest(test *testing.T) {
+	var target Something
+	var err, external error
+	if err, external = SerializeBody(bytes.NewReader([]byte("?")), &target); err != nil {
+		test.Fatal(err)
+	}
+
+	if external == nil {
+		test.Errorf("invalid body was parsed %#v", target)
+	}
+}
+
+func Test_something_nil(test *testing.T) {
+	var target Something
+	var err, external error
+	if err, external = SerializeBody(nil, &target); err != nil {
+		test.Fatal(err)
+	}
+
+	if external != ErrNilBody {
+		test.Errorf("nil body was parsed %#v", target)
+	}
+}

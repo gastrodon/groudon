@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrInvalidTyping = fmt.Errorf("json body types do not match expected")
+	ErrNilBody       = fmt.Errorf("body reader is nil")
 )
 
 type Fillable interface {
@@ -59,6 +60,11 @@ func encodeBody(data map[string]interface{}, target Fillable) (err error) {
 }
 
 func SerializeBody(reader io.Reader, target Fillable) (internal, external error) {
+	if reader == nil {
+		external = ErrNilBody
+		return
+	}
+
 	var closable bool
 	if _, closable = reader.(io.Closer); closable {
 		defer reader.(io.Closer).Close()
