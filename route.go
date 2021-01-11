@@ -2,142 +2,133 @@ package groudon
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
-	"regexp"
 )
 
 var (
 	INTERNAL_ERR = []byte(`{"error": "internal_error"}`)
 )
 
-func resolveHandler(method, route string) (handler func(*http.Request) (int, map[string]interface{}, error)) {
-	var expr *regexp.Regexp
-	var methods *MethodMap
-	for expr, methods = range path_handlers {
-		if expr.MatchString(route) {
-			if methods == nil {
-				break
-			}
-
-			var exists bool
-			if handler, exists = (*methods)[method]; !exists {
-				handler = default_method
-			}
-
-			return
-		}
-	}
-
-	handler = default_route
-	return
-}
-
-func resolveMiddleware(method, route string) (middlewares []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) {
-	var expr *regexp.Regexp
-	var methods *MiddlewareMethodMap
-	for expr, methods = range middleware_path_handlers {
-		if expr.MatchString(route) {
-			if methods == nil {
-				break
-			}
-
-			var exists bool
-			if middlewares, exists = (*methods)[method]; !exists {
-				middlewares = nil
-			}
-
-			return
-		}
-	}
-
-	middlewares = nil
-	return
-}
-
-func handleAfterMiddleware(request *http.Request, handler func(*http.Request) (int, map[string]interface{}, error), route_middlewares []func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) (code int, r_map map[string]interface{}, err error) {
-	var current func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)
-	var modified *http.Request
-	var pass bool
-	for _, current = range middleware_handlers {
-		if modified, pass, code, r_map, err = current(request); !pass || err != nil {
-			return
-		}
-
-		if modified != nil {
-			request = modified
-		}
-	}
-
-	if route_middlewares == nil {
-		code, r_map, err = handler(request)
-		return
-	}
-
-	var middleware func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)
-	for _, middleware = range route_middlewares {
-		if modified, pass, code, r_map, err = middleware(request); !pass || err != nil {
-			return
-		}
-
-		if modified != nil {
-			request = modified
-		}
-	}
-
-	code, r_map, err = handler(request)
-	return
-}
-
-// Handle all requests with this method
-//
-// For any route that this recieves, it will look up where it should be routed,
-// including first passing it through middleware
-//
-// It will also handle errs and default r_maps
 func Route(writer http.ResponseWriter, request *http.Request) {
-	log.Println(request.Method, request.URL.Path)
-	writer.Header().Set("Content-Type", "application/json")
-
+	// TODO defer panic responder
+	var modified *http.Request
+	var ok bool
 	var code int
-	var r_map map[string]interface{}
+	var body map[string]interface{}
 	var err error
-	if code, r_map, err = handleAfterMiddleware(
-		request,
-		resolveHandler(request.Method, request.URL.Path),
-		resolveMiddleware(request.Method, request.URL.Path),
-	); err != nil {
-		writer.WriteHeader(500)
-		writer.Write(INTERNAL_ERR)
 
-		log.Println(request.Method, request.URL.Path, " -> ", 500)
-		log.Println(err)
+	var middleware Middleware
+	for _, middleware = range resolveMiddleware(request.Method, request.URL.Path) {
+		if modified, ok, code, body, err = middleware.Func(request); err != nil {
+			respondErr(writer, err)
+			return
+		}
+
+		if !ok {
+			respond(writer, code, body)
+			return
+		}
+
+		if modified != nil {
+			request = modified
+		}
+	}
+
+	var handler Handler = resolveHandler(request.Method, request.URL.Path)
+	if code, body, err = handler.Func(request); err != nil {
+		respondErr(writer, err)
 		return
 	}
 
-	if r_map == nil {
-		var exists bool
-		if r_map, exists = catchers[code]; !exists {
-			writer.WriteHeader(204)
+	respond(writer, code, body)
+	return
+}
 
-			log.Println(request.Method, request.URL.Path, " -> ", 204)
+func respond(writer http.ResponseWriter, code int, body map[string]interface{}) {
+	if body == nil {
+		// TODO add empty body defaulting here
+		writer.WriteHeader(code)
+		return
+	}
+
+	var bodyBytes []byte
+	var err error
+	if bodyBytes, err = json.Marshal(body); err != nil {
+		respondErr(writer, err)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(code)
+	writer.Write(bodyBytes)
+	return
+}
+
+func respondErr(writer http.ResponseWriter, err error) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(500)
+	writer.Write(INTERNAL_ERR)
+	return
+}
+
+func resolveMiddleware(method, path string) (resolved []Middleware) {
+	var candidates []Middleware = middlewareFor(method)
+
+	resolved = make([]Middleware, len(candidates))
+	var size int = 0
+	var candidate Middleware
+	for _, candidate = range candidates {
+		if candidate.Route.MatchString(path) {
+			resolved[size] = candidate
+			size++
+		}
+	}
+
+	resolved = resolved[:size]
+	return
+}
+
+func resolveHandler(method, path string) (resolved Handler) {
+	var candidate Handler
+	for _, candidate = range handlersFor(method) {
+		if candidate.Route.MatchString(path) {
+			resolved = candidate
 			return
 		}
 	}
 
-	var response []byte
-	if response, err = json.Marshal(r_map); err != nil {
-		writer.WriteHeader(500)
-		writer.Write(INTERNAL_ERR)
+	// TODO default not found
+	return
+}
 
-		log.Println(request.Method, request.URL.Path, " -> ", 500)
-		log.Println(err)
-		return
+func middlewareFor(method string) (filtered []Middleware) {
+	filtered = make([]Middleware, len(middleware))
+
+	var size int = 0
+	var route Middleware
+	for _, route = range middleware {
+		if route.Method == method {
+			filtered[size] = route
+			size++
+		}
 	}
 
-	writer.WriteHeader(code)
-	writer.Write(response)
+	filtered = filtered[:size]
+	return
+}
 
-	log.Println(request.Method, request.URL.Path, " -> ", code)
+func handlersFor(method string) (filtered []Handler) {
+	filtered = make([]Handler, len(handlers))
+
+	var size int = 0
+	var route Handler
+	for _, route = range handlers {
+		if route.Method == method {
+			filtered[size] = route
+			size++
+		}
+	}
+
+	filtered = filtered[:size]
 	return
 }
