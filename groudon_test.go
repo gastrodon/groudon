@@ -14,6 +14,14 @@ func restore() {
 	handlers = make([]Handler, 0)
 	middleware = make([]Middleware, 0)
 	routes = make([]*regexp.Regexp, 0)
+	codeResponses = map[int]map[string]interface{}{
+		400: map[string]interface{}{"error": "bad_request"},
+		401: map[string]interface{}{"error": "unauthorized"},
+		403: map[string]interface{}{"error": "forbidden"},
+		404: map[string]interface{}{"error": "not_found"},
+		405: map[string]interface{}{"error": "bad_method"},
+		500: map[string]interface{}{"error": "internal_error"},
+	}
 }
 
 func handleErr(_ *http.Request) (_ int, _ map[string]interface{}, err error) {

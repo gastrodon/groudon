@@ -324,3 +324,16 @@ func Test_handlersFor(test *testing.T) {
 
 	handlerOk(filtered[0], request(method, "/ligma"), id, test)
 }
+
+func Test_AddCodeResponse(test *testing.T) {
+	var code int = 404
+	var body map[string]interface{} = say(uuid.New().String())
+	AddCodeResponse(code, body)
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request("GET", "/foobar"))
+
+	var want []byte
+	want, _ = json.Marshal(body)
+	recorderOk(recorder, code, want, test)
+}
