@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"testing"
 )
 
 func restore() {
 	handlers = make([]Handler, 0)
 	middleware = make([]Middleware, 0)
+	routes = make([]*regexp.Regexp, 0)
 }
 
 func handleErr(_ *http.Request) (_ int, _ map[string]interface{}, err error) {

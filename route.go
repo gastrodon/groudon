@@ -3,6 +3,7 @@ package groudon
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 )
 
 func savePanic(writer http.ResponseWriter) {
@@ -98,6 +99,14 @@ func resolveHandler(method, path string) (resolved Handler) {
 	for _, candidate = range handlersFor(method) {
 		if candidate.Route.MatchString(path) {
 			resolved = candidate
+			return
+		}
+	}
+
+	var compiled *regexp.Regexp
+	for _, compiled = range routes {
+		if compiled.MatchString(path) {
+			resolved = defaultMethod
 			return
 		}
 	}

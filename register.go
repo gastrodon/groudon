@@ -23,6 +23,7 @@ type Middleware struct {
 var (
 	handlers      []Handler                      = make([]Handler, 0)
 	middleware    []Middleware                   = make([]Middleware, 0)
+	routes        []*regexp.Regexp               = make([]*regexp.Regexp, 0)
 	defaultRoute  Handler                        = Handler{funcDefaultRoute, "", regexp.MustCompile(".*")}
 	defaultMethod Handler                        = Handler{funcDefaultMethod, "", regexp.MustCompile(".*")}
 	codeResponses map[int]map[string]interface{} = map[int]map[string]interface{}{
@@ -30,28 +31,32 @@ var (
 		401: map[string]interface{}{"error": "unauthorized"},
 		403: map[string]interface{}{"error": "forbidden"},
 		404: map[string]interface{}{"error": "not_found"},
-		405: map[string]interface{}{"error": "bad_request"},
+		405: map[string]interface{}{"error": "bad_method"},
 		500: map[string]interface{}{"error": "internal_error"},
 	}
 )
 
 func AddHandler(method, route string, handlerFunc func(*http.Request) (int, map[string]interface{}, error)) {
+	var compiled *regexp.Regexp = regexp.MustCompile(route)
 	var handler Handler = Handler{
 		Func:   FuncHandler(handlerFunc),
 		Method: method,
-		Route:  regexp.MustCompile(route),
+		Route:  compiled,
 	}
 
+	routes = append(routes, compiled)
 	handlers = append(handlers, handler)
 }
 
 func AddMiddleware(method, route string, handlerFunc func(*http.Request) (*http.Request, bool, int, map[string]interface{}, error)) {
+	var compiled *regexp.Regexp = regexp.MustCompile(route)
 	var ware Middleware = Middleware{
 		Func:   FuncMiddleware(handlerFunc),
 		Method: method,
-		Route:  regexp.MustCompile(route),
+		Route:  compiled,
 	}
 
+	routes = append(routes, compiled)
 	middleware = append(middleware, ware)
 }
 

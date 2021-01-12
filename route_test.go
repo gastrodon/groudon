@@ -26,8 +26,7 @@ func Test_route(test *testing.T) {
 	recorderOk(recorder, code, bodyBytes, test)
 }
 
-func Test_route_default(test *testing.T) {
-	var code = 404
+func Test_route_notFound(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request("POST", uuid.New().String()))
 
@@ -37,6 +36,27 @@ func Test_route_default(test *testing.T) {
 		test.Fatalf("body incorrect, %s != %s", body, want)
 	}
 
+	var code = 404
+	if code != recorder.Code {
+		test.Fatalf("code incorrect, %d != %d", code, recorder.Code)
+	}
+}
+
+func Test_route_badMethod(test *testing.T) {
+	test.Cleanup(restore)
+
+	AddHandler("GET", "/.*", handlerSays(uuid.New().String()))
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request("POST", "/luger/"))
+
+	var want string = `{"error":"bad_method"}`
+	var body string = string(recorder.Body.Bytes())
+	if body != want {
+		test.Fatalf("body incorrect, %s != %s", body, want)
+	}
+
+	var code = 405
 	if code != recorder.Code {
 		test.Fatalf("code incorrect, %d != %d", code, recorder.Code)
 	}
