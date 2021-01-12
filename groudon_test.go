@@ -2,6 +2,7 @@ package groudon
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,6 +12,17 @@ import (
 func restore() {
 	handlers = make([]Handler, 0)
 	middleware = make([]Middleware, 0)
+}
+
+func handleErr(_ *http.Request) (_ int, _ map[string]interface{}, err error) {
+	err = fmt.Errorf("")
+	return
+}
+
+func wareErr(_ *http.Request) (_ *http.Request, ok bool, _ int, _ map[string]interface{}, err error) {
+	ok = false
+	err = fmt.Errorf("")
+	return
 }
 
 func request(method, path string) (made *http.Request) {

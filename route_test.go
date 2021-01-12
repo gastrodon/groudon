@@ -83,6 +83,32 @@ func Test_route_middlewareNotOk(test *testing.T) {
 	recorderOk(recorder, code, bodyBytes, test)
 }
 
+func Test_route_middlewareErr(test *testing.T) {
+	test.Cleanup(restore)
+
+	var method string = "POST"
+
+	AddMiddleware(method, ".*", wareErr)
+	AddHandler(method, ".*", handlerSays(uuid.New().String()))
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request(method, "/foobar/baz"))
+	recorderErrOk(recorder, test)
+}
+
+func Test_route_handlerErr(test *testing.T) {
+	test.Cleanup(restore)
+
+	var method string = "POST"
+
+	AddMiddleware(method, ".*", middlewareSays(uuid.New().String()))
+	AddHandler(method, ".*", handleErr)
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request(method, "/say/hello/to/bengis"))
+	recorderErrOk(recorder, test)
+}
+
 func Test_route_manyMiddleware(test *testing.T) {
 	test.Cleanup(restore)
 
