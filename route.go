@@ -5,8 +5,18 @@ import (
 	"net/http"
 )
 
+func savePanic(writer http.ResponseWriter) {
+	var recovered interface{}
+	if recovered = recover(); recovered != nil {
+		respond(writer, 500, nil)
+	}
+
+	return
+}
+
 func Route(writer http.ResponseWriter, request *http.Request) {
-	// TODO defer panic responder
+	defer savePanic(writer)
+
 	var modified *http.Request
 	var ok bool
 	var code int

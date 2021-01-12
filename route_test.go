@@ -112,6 +112,17 @@ func Test_route_middlewareErr(test *testing.T) {
 	recorderErrOk(recorder, test)
 }
 
+func Test_route_middlewarePanic(test *testing.T) {
+	test.Cleanup(restore)
+
+	var method string = "TRACE"
+	AddMiddleware(method, ".*", warePanic)
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request(method, "/black/moth/super/rainbow"))
+	recorderErrOk(recorder, test)
+}
+
 func Test_route_handlerErr(test *testing.T) {
 	test.Cleanup(restore)
 
@@ -122,6 +133,17 @@ func Test_route_handlerErr(test *testing.T) {
 
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request(method, "/say/hello/to/bengis"))
+	recorderErrOk(recorder, test)
+}
+
+func Test_route_handlerPanic(test *testing.T) {
+	test.Cleanup(restore)
+
+	var method string = "POST"
+	AddHandler(method, ".*", handlePanic)
+
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	Route(recorder, request(method, "/what/in/tarnation"))
 	recorderErrOk(recorder, test)
 }
 

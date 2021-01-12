@@ -19,9 +19,19 @@ func handleErr(_ *http.Request) (_ int, _ map[string]interface{}, err error) {
 	return
 }
 
+func handlePanic(_ *http.Request) (_ int, _ map[string]interface{}, _ error) {
+	panic("fail")
+	return
+}
+
 func wareErr(_ *http.Request) (_ *http.Request, ok bool, _ int, _ map[string]interface{}, err error) {
 	ok = false
 	err = fmt.Errorf("")
+	return
+}
+
+func warePanic(_ *http.Request) (_ *http.Request, ok bool, _ int, _ map[string]interface{}, _ error) {
+	panic("fail")
 	return
 }
 
