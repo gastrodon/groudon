@@ -1,4 +1,4 @@
-module github.com/gastrodon/groudon
+module github.com/gastrodon/groudon/v2
 
 go 1.15
 
