@@ -64,6 +64,8 @@ func Test_AddMiddleware_ordered(test *testing.T) {
 }
 
 func Test_AddHandlerMethods(test *testing.T) {
+	test.Cleanup(restore)
+
 	var adders []func(string, func(*http.Request) (int, map[string]interface{}, error)) = []func(string, func(*http.Request) (int, map[string]interface{}, error)){
 		Connect,
 		Delete,

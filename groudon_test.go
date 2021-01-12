@@ -1,7 +1,9 @@
 package groudon
 
 import (
+	"context"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
@@ -21,8 +23,14 @@ func blank() (made *http.Request) {
 	return
 }
 
+func say(message string) (said map[string]interface{}) {
+	said = map[string]interface{}{"message": message}
+	return
+}
+
 func handlerSays(message string) (handler FuncHandler) {
-	handler = func(_ *http.Request) (_ int, data map[string]interface{}, _ error) {
+	handler = func(_ *http.Request) (code int, data map[string]interface{}, _ error) {
+		code = 200
 		data = map[string]interface{}{"message": message}
 		return
 	}
@@ -30,9 +38,54 @@ func handlerSays(message string) (handler FuncHandler) {
 	return
 }
 
+func handlerPassed(keys []string) (handler FuncHandler) {
+	handler = func(request *http.Request) (code int, data map[string]interface{}, _ error) {
+		code = 200
+		data = make(map[string]interface{}, len(keys))
+
+		var name string
+		for _, name = range keys {
+			data[name] = request.Context().Value(name)
+		}
+
+		return
+	}
+
+	return
+}
+
 func middlewareSays(message string) (ware FuncMiddleware) {
-	ware = func(_ *http.Request) (_ *http.Request, _ bool, _ int, data map[string]interface{}, _ error) {
+	ware = func(_ *http.Request) (_ *http.Request, ok bool, _ int, data map[string]interface{}, _ error) {
+		ok = true
 		data = map[string]interface{}{"message": message}
+		return
+	}
+
+	return
+}
+
+func middlewareSaysNoOk(message string) (ware FuncMiddleware) {
+	ware = func(_ *http.Request) (_ *http.Request, ok bool, code int, data map[string]interface{}, _ error) {
+		ok = false
+		code = 400
+		data = map[string]interface{}{"message": message}
+		return
+	}
+
+	return
+}
+
+func middlewarePasses(key, message string) (ware FuncMiddleware) {
+	ware = func(request *http.Request) (modified *http.Request, ok bool, _ int, _ map[string]interface{}, _ error) {
+		ok = true
+		modified = request.WithContext(
+			context.WithValue(
+				request.Context(),
+				key,
+				message,
+			),
+		)
+
 		return
 	}
 
@@ -103,6 +156,21 @@ func middlewareOk(ware Middleware, request *http.Request, message string, test *
 	}
 
 	funcMiddlewareOk(ware.Func, message, test)
+}
+
+func recorderOk(recorder *httptest.ResponseRecorder, code int, body []byte, test *testing.T) {
+	if recorder.Code != code {
+		test.Fatalf("code incorrect, %d != %d", recorder.Code, code)
+	}
+
+	var recorderBody string = string(recorder.Body.Bytes())
+	if recorderBody != string(body) {
+		test.Fatalf("body incorrect, %s != %s", recorderBody, string(body))
+	}
+}
+
+func recorderErrOk(recorder *httptest.ResponseRecorder, test *testing.T) {
+	recorderOk(recorder, 500, INTERNAL_ERR, test)
 }
 
 func TestMain(main *testing.M) {
