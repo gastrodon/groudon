@@ -21,8 +21,10 @@ type Middleware struct {
 }
 
 var (
-	handlers   []Handler    = make([]Handler, 0)
-	middleware []Middleware = make([]Middleware, 0)
+	handlers      []Handler    = make([]Handler, 0)
+	middleware    []Middleware = make([]Middleware, 0)
+	defaultRoute  Handler      = Handler{funcDefaultRoute, "", regexp.MustCompile(".*")}
+	defaultMethod Handler      = Handler{funcDefaultMethod, "", regexp.MustCompile(".*")}
 )
 
 func AddHandler(method, route string, handlerFunc func(*http.Request) (int, map[string]interface{}, error)) {
@@ -79,4 +81,14 @@ func Put(route string, handler func(*http.Request) (int, map[string]interface{},
 
 func Trace(route string, handler func(*http.Request) (int, map[string]interface{}, error)) {
 	AddHandler("TRACE", route, handler)
+}
+
+func funcDefaultRoute(_ *http.Request) (code int, _ map[string]interface{}, err error) {
+	code = 404
+	return
+}
+
+func funcDefaultMethod(_ *http.Request) (code int, _ map[string]interface{}, err error) {
+	code = 405
+	return
 }

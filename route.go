@@ -97,7 +97,7 @@ func resolveHandler(method, path string) (resolved Handler) {
 		}
 	}
 
-	// TODO default not found
+	resolved = defaultRoute
 	return
 }
 

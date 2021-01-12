@@ -26,6 +26,22 @@ func Test_route(test *testing.T) {
 	recorderOk(recorder, code, bodyBytes, test)
 }
 
+func Test_route_default(test *testing.T) {
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	var code = 404
+	Route(recorder, request("POST", uuid.New().String()))
+
+	var want string = ``
+	var body string = string(recorder.Body.Bytes())
+	if body != want {
+		test.Fatalf("body incorrect, %s != %s", body, want)
+	}
+
+	if code != recorder.Code {
+		test.Fatalf("code incorrect, %d != %d", code, recorder.Code)
+	}
+}
+
 func Test_route_many(test *testing.T) {
 	test.Cleanup(restore)
 
