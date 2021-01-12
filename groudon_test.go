@@ -182,7 +182,7 @@ func recorderOk(recorder *httptest.ResponseRecorder, code int, body []byte, test
 }
 
 func recorderErrOk(recorder *httptest.ResponseRecorder, test *testing.T) {
-	recorderOk(recorder, 500, INTERNAL_ERR, test)
+	recorderOk(recorder, 500, []byte(`{"error":"internal_error"}`), test)
 }
 
 func TestMain(main *testing.M) {

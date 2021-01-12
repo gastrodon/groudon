@@ -27,11 +27,11 @@ func Test_route(test *testing.T) {
 }
 
 func Test_route_default(test *testing.T) {
-	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	var code = 404
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request("POST", uuid.New().String()))
 
-	var want string = ``
+	var want string = `{"error":"not_found"}`
 	var body string = string(recorder.Body.Bytes())
 	if body != want {
 		test.Fatalf("body incorrect, %s != %s", body, want)

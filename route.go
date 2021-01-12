@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-var (
-	INTERNAL_ERR = []byte(`{"error": "internal_error"}`)
-)
-
 func Route(writer http.ResponseWriter, request *http.Request) {
 	// TODO defer panic responder
 	var modified *http.Request
@@ -46,9 +42,10 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 
 func respond(writer http.ResponseWriter, code int, body map[string]interface{}) {
 	if body == nil {
-		// TODO add empty body defaulting here
-		writer.WriteHeader(code)
-		return
+		if body = getCodeResponse(code); body == nil {
+			writer.WriteHeader(code)
+			return
+		}
 	}
 
 	var bodyBytes []byte
@@ -65,9 +62,7 @@ func respond(writer http.ResponseWriter, code int, body map[string]interface{}) 
 }
 
 func respondErr(writer http.ResponseWriter, err error) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(500)
-	writer.Write(INTERNAL_ERR)
+	respond(writer, 500, nil)
 	return
 }
 
