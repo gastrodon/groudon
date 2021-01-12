@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	UUID_PATTERN       = `[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`
+	UUID_PATTERN       = `[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}`
 	UUID_ONLY_PATTERN  = `^` + UUID_PATTERN + `$`
-	EMAIL_PATTERN      = "[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*"
+	EMAIL_PATTERN      = "[^@]+@[^@]+"
 	EMAIL_ONLY_PATTERN = `^` + EMAIL_PATTERN + `$`
 )
 
