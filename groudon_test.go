@@ -208,3 +208,11 @@ func recorderErrOk(recorder *httptest.ResponseRecorder, test *testing.T) {
 func TestMain(main *testing.M) {
 	os.Exit(main.Run())
 }
+
+func corsOk(recorder *httptest.ResponseRecorder, test *testing.T) {
+	var corsHeader = recorder.Header().Get("Access-Control-Allow-Origin")
+
+	if corsHeader != "*" {
+		test.Fatalf("cors header incorrect, * != %s", corsHeader)
+	}
+}

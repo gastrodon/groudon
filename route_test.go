@@ -24,6 +24,7 @@ func Test_route(test *testing.T) {
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(say(id))
 	recorderOk(recorder, code, bodyBytes, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_notFound(test *testing.T) {
@@ -40,6 +41,8 @@ func Test_route_notFound(test *testing.T) {
 	if code != recorder.Code {
 		test.Fatalf("code incorrect, %d != %d", code, recorder.Code)
 	}
+
+	corsOk(recorder, test)
 }
 
 func Test_route_badMethod(test *testing.T) {
@@ -60,6 +63,8 @@ func Test_route_badMethod(test *testing.T) {
 	if code != recorder.Code {
 		test.Fatalf("code incorrect, %d != %d", code, recorder.Code)
 	}
+
+	corsOk(recorder, test)
 }
 
 func Test_route_many(test *testing.T) {
@@ -81,6 +86,7 @@ func Test_route_many(test *testing.T) {
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(say(id))
 	recorderOk(recorder, code, bodyBytes, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_middleware(test *testing.T) {
@@ -99,6 +105,7 @@ func Test_route_middleware(test *testing.T) {
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(say(id))
 	recorderOk(recorder, code, bodyBytes, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_middlewareNotOk(test *testing.T) {
@@ -117,6 +124,7 @@ func Test_route_middlewareNotOk(test *testing.T) {
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(say(id))
 	recorderOk(recorder, code, bodyBytes, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_middlewareErr(test *testing.T) {
@@ -130,6 +138,7 @@ func Test_route_middlewareErr(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request(method, "/foobar/baz"))
 	recorderErrOk(recorder, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_middlewarePanic(test *testing.T) {
@@ -141,6 +150,7 @@ func Test_route_middlewarePanic(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request(method, "/black/moth/super/rainbow"))
 	recorderErrOk(recorder, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_handlerErr(test *testing.T) {
@@ -154,6 +164,7 @@ func Test_route_handlerErr(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request(method, "/say/hello/to/bengis"))
 	recorderErrOk(recorder, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_handlerPanic(test *testing.T) {
@@ -165,6 +176,7 @@ func Test_route_handlerPanic(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	Route(recorder, request(method, "/what/in/tarnation"))
 	recorderErrOk(recorder, test)
+	corsOk(recorder, test)
 }
 
 func Test_route_manyMiddleware(test *testing.T) {
@@ -206,6 +218,8 @@ func Test_route_manyMiddleware(test *testing.T) {
 			test.Fatalf("passed key incorrect %s, %s != %s", key, sets[key], body[key])
 		}
 	}
+
+	corsOk(recorder, test)
 }
 
 func Test_respond(test *testing.T) {
@@ -219,6 +233,7 @@ func Test_respond(test *testing.T) {
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(body)
 	recorderOk(recorder, code, bodyBytes, test)
+	corsOk(recorder, test)
 }
 
 func Test_respond_badJson(test *testing.T) {
@@ -235,6 +250,7 @@ func Test_respond_nil(test *testing.T) {
 
 	respond(recorder, code, nil)
 	recorderOk(recorder, code, nil, test)
+	corsOk(recorder, test)
 }
 
 func Test_respondErr(test *testing.T) {
@@ -336,4 +352,5 @@ func Test_AddCodeResponse(test *testing.T) {
 	var want []byte
 	want, _ = json.Marshal(body)
 	recorderOk(recorder, code, want, test)
+	corsOk(recorder, test)
 }
