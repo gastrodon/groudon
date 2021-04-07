@@ -2,6 +2,7 @@ package groudon
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 )
@@ -9,6 +10,7 @@ import (
 func savePanic(writer http.ResponseWriter) {
 	var recovered interface{}
 	if recovered = recover(); recovered != nil {
+		fmt.Println(recovered)
 		respond(writer, 500, nil)
 	}
 
@@ -75,6 +77,7 @@ func respond(writer http.ResponseWriter, code int, body map[string]interface{}) 
 }
 
 func respondErr(writer http.ResponseWriter, err error) {
+	fmt.Println(err)
 	respond(writer, 500, nil)
 	return
 }
