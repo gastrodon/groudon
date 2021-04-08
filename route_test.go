@@ -236,6 +236,25 @@ func Test_respond(test *testing.T) {
 	corsOk(recorder, test)
 }
 
+func Test_respond_CORS(test *testing.T) {
+	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
+	var code int = 200
+	var id string = uuid.New().String()
+	var body map[string]interface{} = say(id)
+
+	AllowOrigin("foobar")
+	respond(recorder, code, body)
+
+	var bodyBytes []byte
+	bodyBytes, _ = json.Marshal(body)
+	recorderOk(recorder, code, bodyBytes, test)
+	corsOk(recorder, test)
+
+	if allowedOrigin != "foobar" {
+		test.Fatalf("bad allowedOrigin, foobar != %s", allowedOrigin)
+	}
+}
+
 func Test_respond_badJson(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	var body map[string]interface{} = map[string]interface{}{"4": make(chan int, 0)}

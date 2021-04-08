@@ -7,6 +7,14 @@ import (
 	"regexp"
 )
 
+var (
+	allowedOrigin = ""
+)
+
+func AllowOrigin(origin string) {
+	allowedOrigin = origin
+}
+
 func savePanic(writer http.ResponseWriter) {
 	var recovered interface{}
 	if recovered = recover(); recovered != nil {
@@ -54,7 +62,9 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 }
 
 func respond(writer http.ResponseWriter, code int, body map[string]interface{}) {
-	writer.Header().Set("Access-Control-Allow-Origin", "*")
+	if allowedOrigin != "" {
+		writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+	}
 
 	if body == nil {
 		if body = getCodeResponse(code); body == nil {
