@@ -211,8 +211,7 @@ func TestMain(main *testing.M) {
 
 func corsOk(recorder *httptest.ResponseRecorder, test *testing.T) {
 	var corsHeader = recorder.Header().Get("Access-Control-Allow-Origin")
+	_ = corsHeader
 
-	if corsHeader != allowedOrigin {
-		test.Fatalf("cors header incorrect, %s != %s", allowedOrigin, corsHeader)
-	}
+	test.Fatal("TODO: come back when CORS is implemented!")
 }
