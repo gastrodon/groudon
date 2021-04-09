@@ -54,6 +54,8 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 }
 
 func respond(writer http.ResponseWriter, request *http.Request, code int, body map[string]interface{}) {
+	writer.Header().Set("Access-Control-Allow-Origin", allowOriginHeader(request.Header.Get("Origin")))
+
 	if body == nil {
 		if body = getCodeResponse(code); body == nil {
 			writer.WriteHeader(code)
