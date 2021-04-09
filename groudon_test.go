@@ -14,6 +14,7 @@ func restore() {
 	handlers = make([]Handler, 0)
 	middleware = make([]Middleware, 0)
 	routes = make([]*regexp.Regexp, 0)
+	allowedOrigins = make(map[string]bool, 0)
 	codeResponses = map[int]map[string]interface{}{
 		400: map[string]interface{}{"error": "bad_request"},
 		401: map[string]interface{}{"error": "unauthorized"},
@@ -209,9 +210,13 @@ func TestMain(main *testing.M) {
 	os.Exit(main.Run())
 }
 
-func corsOk(recorder *httptest.ResponseRecorder, test *testing.T) {
-	var corsHeader = recorder.Header().Get("Access-Control-Allow-Origin")
-	_ = corsHeader
+func corsOk(recorder *httptest.ResponseRecorder, origin string, test *testing.T) {
+	var ok, exists bool
+	ok, exists = allowedOrigins[origin]
+	ok = ok && exists
 
-	test.Fatal("TODO: come back when CORS is implemented!")
+	var allowed = recorder.Header().Get("Access-Control-Allow-Origin")
+	if !ok || allowed == "" {
+		test.Fatalf("Bad allowed origin, %s should be allowed", origin)
+	}
 }
