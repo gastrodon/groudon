@@ -5,7 +5,6 @@ import (
 
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 )
@@ -223,27 +222,6 @@ func Test_respond(test *testing.T) {
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(body)
 	recorderOk(recorder, code, bodyBytes, test)
-}
-
-func Test_respond_CORS(test *testing.T) {
-	test.Cleanup(restore)
-
-	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
-	var code int = 200
-	var id string = uuid.New().String()
-	var body map[string]interface{} = say(id)
-
-	var request *http.Request = request("GET", "/")
-	var origin string = "https://gastrodon.io"
-	AllowOrigin(origin)
-
-	request.Header.Set("Origin", origin)
-	respond(recorder, request, code, body)
-
-	var bodyBytes []byte
-	bodyBytes, _ = json.Marshal(body)
-	recorderOk(recorder, code, bodyBytes, test)
-	corsOk(recorder, origin, test)
 }
 
 func Test_respond_badJson(test *testing.T) {

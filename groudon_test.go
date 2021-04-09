@@ -210,13 +210,16 @@ func TestMain(main *testing.M) {
 	os.Exit(main.Run())
 }
 
-func corsOk(recorder *httptest.ResponseRecorder, origin string, test *testing.T) {
+func corsOk(recorder *httptest.ResponseRecorder, origin string, test *testing.T, allow bool) {
 	var ok, exists bool
 	ok, exists = allowedOrigins[origin]
 	ok = ok && exists
 
 	var allowed = recorder.Header().Get("Access-Control-Allow-Origin")
-	if !ok || allowed == "" {
-		test.Fatalf("Bad allowed origin, %s should be allowed", origin)
+	if allow && (!ok || allowed == "") {
+	}
+
+	if !allow && (ok || allowed != "") {
+		test.Fatalf("Bad allowed origin, %s should be disallowed", origin)
 	}
 }
