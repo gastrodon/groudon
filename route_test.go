@@ -228,7 +228,7 @@ func Test_respond(test *testing.T) {
 	var id string = uuid.New().String()
 	var body map[string]interface{} = say(id)
 
-	respond(recorder, code, body)
+	respond(recorder, request("GET", "/"), code, body)
 
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(body)
@@ -242,24 +242,19 @@ func Test_respond_CORS(test *testing.T) {
 	var id string = uuid.New().String()
 	var body map[string]interface{} = say(id)
 
-	AllowOrigin("foobar")
-	respond(recorder, code, body)
+	respond(recorder, request("GET", "/"), code, body)
 
 	var bodyBytes []byte
 	bodyBytes, _ = json.Marshal(body)
 	recorderOk(recorder, code, bodyBytes, test)
 	corsOk(recorder, test)
-
-	if allowedOrigin != "foobar" {
-		test.Fatalf("bad allowedOrigin, foobar != %s", allowedOrigin)
-	}
 }
 
 func Test_respond_badJson(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	var body map[string]interface{} = map[string]interface{}{"4": make(chan int, 0)}
 
-	respond(recorder, 200, body)
+	respond(recorder, request("GET", "/"), 200, body)
 	recorderErrOk(recorder, test)
 }
 
@@ -267,7 +262,7 @@ func Test_respond_nil(test *testing.T) {
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
 	var code int = 204
 
-	respond(recorder, code, nil)
+	respond(recorder, request("GET", "/"), code, nil)
 	recorderOk(recorder, code, nil, test)
 	corsOk(recorder, test)
 }
@@ -277,7 +272,7 @@ func Test_respondErr(test *testing.T) {
 	var id string = uuid.New().String()
 	var err error = fmt.Errorf(id)
 
-	respondErr(recorder, err)
+	respondErr(recorder, request("GET", "/"), err)
 	recorderErrOk(recorder, test)
 }
 

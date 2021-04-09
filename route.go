@@ -7,26 +7,18 @@ import (
 	"regexp"
 )
 
-var (
-	allowedOrigin = ""
-)
-
-func AllowOrigin(origin string) {
-	allowedOrigin = origin
-}
-
-func savePanic(writer http.ResponseWriter) {
+func savePanic(writer http.ResponseWriter, request *http.Request) {
 	var recovered interface{}
 	if recovered = recover(); recovered != nil {
 		fmt.Println(recovered)
-		respond(writer, 500, nil)
+		respond(writer, request, 500, nil)
 	}
 
 	return
 }
 
 func Route(writer http.ResponseWriter, request *http.Request) {
-	defer savePanic(writer)
+	defer savePanic(writer, request)
 
 	var modified *http.Request
 	var ok bool
@@ -37,12 +29,12 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 	var middleware Middleware
 	for _, middleware = range resolveMiddleware(request.Method, request.URL.Path) {
 		if modified, ok, code, body, err = middleware.Func(request); err != nil {
-			respondErr(writer, err)
+			respondErr(writer, request, err)
 			return
 		}
 
 		if !ok {
-			respond(writer, code, body)
+			respond(writer, request, code, body)
 			return
 		}
 
@@ -53,19 +45,15 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 
 	var handler Handler = resolveHandler(request.Method, request.URL.Path)
 	if code, body, err = handler.Func(request); err != nil {
-		respondErr(writer, err)
+		respondErr(writer, request, err)
 		return
 	}
 
-	respond(writer, code, body)
+	respond(writer, request, code, body)
 	return
 }
 
-func respond(writer http.ResponseWriter, code int, body map[string]interface{}) {
-	if allowedOrigin != "" {
-		writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-	}
-
+func respond(writer http.ResponseWriter, request *http.Request, code int, body map[string]interface{}) {
 	if body == nil {
 		if body = getCodeResponse(code); body == nil {
 			writer.WriteHeader(code)
@@ -76,7 +64,7 @@ func respond(writer http.ResponseWriter, code int, body map[string]interface{}) 
 	var bodyBytes []byte
 	var err error
 	if bodyBytes, err = json.Marshal(body); err != nil {
-		respondErr(writer, err)
+		respondErr(writer, request, err)
 		return
 	}
 
@@ -86,9 +74,9 @@ func respond(writer http.ResponseWriter, code int, body map[string]interface{}) 
 	return
 }
 
-func respondErr(writer http.ResponseWriter, err error) {
+func respondErr(writer http.ResponseWriter, request *http.Request, err error) {
 	fmt.Println(err)
-	respond(writer, 500, nil)
+	respond(writer, request, 500, nil)
 	return
 }
 
