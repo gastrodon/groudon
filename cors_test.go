@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_respond_AllowedOrigin(test *testing.T) {
+func Test_handlePreflight(test *testing.T) {
 	test.Cleanup(restore)
 
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
@@ -23,7 +23,7 @@ func Test_respond_AllowedOrigin(test *testing.T) {
 	corsOk(recorder, origin, test, true)
 }
 
-func Test_respond_DisallowedOrigin(test *testing.T) {
+func Test_handlePreflight_DisallowedOrigin(test *testing.T) {
 	test.Cleanup(restore)
 
 	var recorder *httptest.ResponseRecorder = httptest.NewRecorder()
