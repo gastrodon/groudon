@@ -7,10 +7,18 @@ import (
 
 var (
 	allowedOrigins map[string]bool = make(map[string]bool, 0)
+	allowedHeaders map[string]bool = map[string]bool{
+		"Authorization": true,
+	}
 )
 
 func AllowOrigin(origin string) {
 	allowedOrigins[origin] = true
+	return
+}
+
+func AllowHeader(header string) {
+	allowedHeaders[header] = true
 	return
 }
 
@@ -44,10 +52,28 @@ func allowedMethods(route string) (methods []string) {
 	return
 }
 
+func allowedHeaders() (headers []string) {
+	headers = make([]string, len(allowedHeaders))
+
+	var header string
+	var size int
+	for header = range allowedHeaders {
+		headers[size] = header
+		size++
+	}
+
+	return
+}
+
 func handlePreflight(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set(
 		"Access-Control-Allow-Methods",
 		strings.Join(allowedMethods(request.URL.Path), ", "),
+	)
+
+	writer.Header().Set(
+		"Access-Control-Allow-Headers",
+		strings.Join(allowedHeaders(), ", "),
 	)
 
 	respond(writer, request, 204, nil)
