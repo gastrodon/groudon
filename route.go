@@ -20,6 +20,11 @@ func savePanic(writer http.ResponseWriter, request *http.Request) {
 func Route(writer http.ResponseWriter, request *http.Request) {
 	defer savePanic(writer, request)
 
+	writer.Header().Set(
+		"Access-Control-Allow-Origin",
+		allowOriginHeader(request.Header.Get("Origin")),
+	)
+
 	if request.Method == "OPTIONS" {
 		handlePreflight(writer, request)
 		return

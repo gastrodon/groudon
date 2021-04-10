@@ -46,11 +46,6 @@ func allowedMethods(route string) (methods []string) {
 
 func handlePreflight(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set(
-		"Access-Control-Allow-Origin",
-		allowOriginHeader(request.Header.Get("Origin")),
-	)
-
-	writer.Header().Set(
 		"Access-Control-Allow-Methods",
 		strings.Join(allowedMethods(request.URL.Path), ", "),
 	)
