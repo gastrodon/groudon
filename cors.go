@@ -31,7 +31,7 @@ func allowOriginHeader(origin string) (header string) {
 	return
 }
 
-func allowedMethods(route string) (methods []string) {
+func collectAllowedMethods(route string) (methods []string) {
 	var methodSet map[string]bool = make(map[string]bool, 32)
 	var candidate Handler
 	for _, candidate = range handlers {
@@ -52,7 +52,7 @@ func allowedMethods(route string) (methods []string) {
 	return
 }
 
-func allowedHeaders() (headers []string) {
+func collectAllowedHeaders() (headers []string) {
 	headers = make([]string, len(allowedHeaders))
 
 	var header string
@@ -68,12 +68,12 @@ func allowedHeaders() (headers []string) {
 func handlePreflight(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set(
 		"Access-Control-Allow-Methods",
-		strings.Join(allowedMethods(request.URL.Path), ", "),
+		strings.Join(collectAllowedMethods(request.URL.Path), ", "),
 	)
 
 	writer.Header().Set(
 		"Access-Control-Allow-Headers",
-		strings.Join(allowedHeaders(), ", "),
+		strings.Join(collectAllowedHeaders(), ", "),
 	)
 
 	respond(writer, request, 204, nil)
