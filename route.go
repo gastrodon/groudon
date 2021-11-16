@@ -1,6 +1,7 @@
 package groudon
 
 import (
+	uuid "github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"encoding/json"
@@ -28,6 +29,9 @@ func savePanic(writer http.ResponseWriter) {
 
 func Route(writer http.ResponseWriter, request *http.Request) {
 	defer savePanic(writer)
+
+	var nonce string = uuid.New().String()
+	go logRequest(request, nonce)
 
 	var modified *http.Request
 	var ok bool
@@ -58,6 +62,7 @@ func Route(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	logResponse(code, nonce)
 	respond(writer, code, body)
 	return
 }
