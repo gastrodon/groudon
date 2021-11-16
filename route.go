@@ -1,8 +1,9 @@
 package groudon
 
 import (
+	"github.com/sirupsen/logrus"
+
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"regexp"
 )
@@ -18,7 +19,7 @@ func AllowOrigin(origin string) {
 func savePanic(writer http.ResponseWriter) {
 	var recovered interface{}
 	if recovered = recover(); recovered != nil {
-		fmt.Println(recovered)
+		logrus.Error(recovered)
 		respond(writer, 500, nil)
 	}
 
@@ -87,7 +88,7 @@ func respond(writer http.ResponseWriter, code int, body map[string]interface{}) 
 }
 
 func respondErr(writer http.ResponseWriter, err error) {
-	fmt.Println(err)
+	logrus.Error(err)
 	respond(writer, 500, nil)
 	return
 }
